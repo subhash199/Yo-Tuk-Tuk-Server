@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Data.SqLite.Core;
+using System.Data.SQLite;
 
 namespace locationserver
 {
@@ -18,33 +18,27 @@ namespace locationserver
         [DllImport("Kernel32.dll", SetLastError = true, ExactSpelling = true)]
         static extern bool FreeConsole();
         public static TcpListener listener;
-
-
+        public static SQLiteConnection sqlConnection;
 
         [STAThread]
 
         public static int Main(string[] args)
         {
-            if (!args.Contains("-w"))
-            {
-                runServer();
-
-                return 0;
-            }
-            else
-            {
+         
                 FreeConsole();
                 var app = new App();
                 return app.Run();
-            }
-
-
-
-
+            
         }
     
         public static void runServer()
         {
+            if(!File.Exists("Database.db"))
+            {
+                SQLiteConnection.CreateFile("Database.db");
+            }
+            sqlConnection = new SQLiteConnection("Data Source=Database.db");
+            sqlConnection.Open();
             //TcpListener listener;
             Socket connection;
             Handler requesthandler;
@@ -100,6 +94,7 @@ namespace locationserver
                 {
                     socketStream.Close();
                     connection.Close();
+                    sqlConnection.Close();
                 }
 
 
