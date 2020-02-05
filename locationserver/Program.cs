@@ -19,6 +19,7 @@ namespace locationserver
         static extern bool FreeConsole();
         public static TcpListener listener;
         public static SQLiteConnection sqlConnection;
+        public static SQLiteCommand cmd = new SQLiteCommand(sqlConnection);
 
         [STAThread]
 
@@ -39,6 +40,7 @@ namespace locationserver
             }
             sqlConnection = new SQLiteConnection("Data Source=Database.db");
             sqlConnection.Open();
+            
             //TcpListener listener;
             Socket connection;
             Handler requesthandler;
@@ -81,7 +83,8 @@ namespace locationserver
                     sw.AutoFlush = true;// sw flushes automatically
                                         //socketStream.ReadTimeout = 1000;
                                         //socketStream.WriteTimeout = 1000;
-
+                    cmd.CommandText = "create table if not exists Orders (OrderID INTEGER, Date DATATIME, Catagory TEXT, Item TEXT, Payment Text, Paid BOOLEAN)";
+                    cmd.ExecuteNonQuery();
 
                 }
 
