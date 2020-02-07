@@ -34,11 +34,11 @@ namespace locationserver
     
         public static void runServer()
         {
-            if(!File.Exists("Database.db"))
+            if(!File.Exists("database.db"))
             {
-                SQLiteConnection.CreateFile("Database.db");
+                SQLiteConnection.CreateFile("database.db");
             }
-            sqlConnection = new SQLiteConnection("Data Source=Database.db");
+            sqlConnection = new SQLiteConnection("Data Source=database.db;");
             sqlConnection.Open();
             
             //TcpListener listener;
