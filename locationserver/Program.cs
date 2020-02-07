@@ -20,27 +20,28 @@ namespace locationserver
         public static TcpListener listener;
         public static SQLiteConnection sqlConnection;
         public static SQLiteCommand cmd = new SQLiteCommand(sqlConnection);
+        public static string readline;
 
         [STAThread]
 
         public static int Main(string[] args)
         {
-         
-                FreeConsole();
-                var app = new App();
-                return app.Run();
-            
+
+            FreeConsole();
+            var app = new App();
+            return app.Run();
+
         }
-    
+
         public static void runServer()
         {
-            if(!File.Exists("database.db"))
+            if (!File.Exists("database.db"))
             {
                 SQLiteConnection.CreateFile("database.db");
             }
             sqlConnection = new SQLiteConnection("Data Source=database.db;");
             sqlConnection.Open();
-            
+
             //TcpListener listener;
             Socket connection;
             Handler requesthandler;
@@ -83,8 +84,21 @@ namespace locationserver
                     sw.AutoFlush = true;// sw flushes automatically
                                         //socketStream.ReadTimeout = 1000;
                                         //socketStream.WriteTimeout = 1000;
-                    cmd.CommandText = "create table if not exists Orders (OrderID INTEGER, Date DATATIME, Catagory TEXT, Item TEXT, Payment Text, Paid BOOLEAN)";
-                    cmd.ExecuteNonQuery();
+                    
+                         readline+= sr.ReadLine();                          
+                    
+
+                    if (readline.Contains("Paid"))
+                    {
+                        InsertData(sr.ReadLine());
+                    }
+                    else if (readline.Contains("create"))
+                    {
+                        string[] fileName = readline.Split(',');
+                        StreamWriter writer = new StreamWriter(fileName[1]);
+                        writer.Close();
+                    }
+
 
                 }
 
@@ -101,6 +115,20 @@ namespace locationserver
                 }
 
 
+            }
+            public void InsertData(string allText)
+            {
+                string[] splitString = allText.Split(',');
+                try
+                {
+                    SQLiteCommand sQLiteCommand;
+                    sQLiteCommand = sqlConnection.CreateCommand();
+                    sQLiteCommand.CommandText = "INSERT INTO Orders(orderId, tableNum, course, dish, price, membersDiscount, paid, payment)";
+                }
+                catch
+                {
+
+                }
             }
         }
 
