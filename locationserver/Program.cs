@@ -76,15 +76,15 @@ namespace locationserver
 
                 NetworkStream socketStream = new NetworkStream(connection);
                 Console.WriteLine("Connection Received");
-                try
-                {
-                    StreamWriter sw = new StreamWriter(socketStream);
-                    StreamReader sr = new StreamReader(socketStream);
+                StreamWriter sw = new StreamWriter(socketStream);
+                StreamReader sr = new StreamReader(socketStream);
+                sw.AutoFlush = true;  // sw flushes automatically
+                                      //socketStream.ReadTimeout = 1000;
+                                      //socketStream.WriteTimeout = 1000;
 
-                    sw.AutoFlush = true;// sw flushes automatically
-                                        //socketStream.ReadTimeout = 1000;
-                                        //socketStream.WriteTimeout = 1000;
-                   
+                try
+                {                               
+                                     
                     readline = sr.ReadLine();
                     string[] fileName = readline.Split(',');
                     var itemList = fileName.ToList();
@@ -107,6 +107,7 @@ namespace locationserver
                             string [] readFile = File.ReadAllLines(fileName[1]);
                             string sendItems = string.Join(",",readFile.ToArray());
                             sw.WriteLine(sendItems);
+                            sw.Close();
                             break;
 
                         default:
@@ -125,7 +126,7 @@ namespace locationserver
                 {
                     socketStream.Close();
                     connection.Close();
-                    sqlConnection.Close();
+                    //sqlConnection.Close();                   
                 }
 
 
