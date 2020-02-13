@@ -39,7 +39,7 @@ namespace locationserver
             {
                 SQLiteConnection.CreateFile("database.db");
             }
-            sqlConnection = new SQLiteConnection("Data Source=database.db;");
+            sqlConnection = new SQLiteConnection(@"Data Source=database.db;");
             sqlConnection.Open();
 
             //TcpListener listener;
@@ -47,7 +47,7 @@ namespace locationserver
             Handler requesthandler;
             try
             {
-                listener = new TcpListener(IPAddress.Any, 5002);
+                listener = new TcpListener(IPAddress.Any, 43);
                 listener.Start();
                 Console.WriteLine("Server is Listening");
                 while (true)
