@@ -157,8 +157,8 @@ namespace locationserver
         public static void CreateTable(SQLiteConnection connection)
         {
             SQLiteCommand sQCommand;
-            string orderTable = "CREATE TABLE Orders (OrderId INT, DateTime DATETIME, TableNumber INT, Course TEXT, DishName TEXT, Price DOUBLE, DiscountPrice DOUBLE, DiscountBool INT, PaidBool INT, PaymentMethod TEXT)";
-            string paidTable = "CREATE TABLE PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT)";
+            string orderTable = "CREATE TABLE IF NOT EXISTS Orders (OrderId INT, DateTime DATETIME, TableNumber INT, Course TEXT, DishName TEXT, Price DOUBLE, DiscountPrice DOUBLE, DiscountBool INT, PaidBool INT, PaymentMethod TEXT)";
+            string paidTable = "CREATE TABLE IF NOT EXISTS PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT)";
 
             sQCommand = connection.CreateCommand();
             sQCommand.CommandText = orderTable;
