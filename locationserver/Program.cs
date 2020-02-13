@@ -43,7 +43,7 @@ namespace locationserver
 
             sqlConnection.Open();
             CreateTable(sqlConnection);
-            
+
 
 
 
@@ -88,8 +88,8 @@ namespace locationserver
                                       //socketStream.WriteTimeout = 1000;
 
                 try
-                {                               
-                                     
+                {
+
                     readline = sr.ReadLine();
                     string[] fileName = readline.Split(',');
                     var itemList = fileName.ToList();
@@ -98,19 +98,19 @@ namespace locationserver
                     switch (fileName[0])
                     {
                         case "paid":
-                            InsertData(readline);
+                            InsertData(fileName);
                             break;
-                        case "create":                            
+                        case "create":
                             StreamWriter writer = new StreamWriter(fileName[1], true);
                             writer.Close();
                             break;
                         case "write":
-                           
-                            File.AppendAllLines(fileName[1], itemList);                            
+
+                            File.AppendAllLines(fileName[1], itemList);
                             break;
                         case "read":
-                            string [] readFile = File.ReadAllLines(fileName[1]);
-                            string sendItems = string.Join(",",readFile.ToArray());
+                            string[] readFile = File.ReadAllLines(fileName[1]);
+                            string sendItems = string.Join(",", readFile.ToArray());
                             sw.WriteLine(sendItems);
                             sw.Close();
                             break;
@@ -118,7 +118,7 @@ namespace locationserver
                         default:
                             break;
                     }
-                   
+
 
                 }
 
@@ -136,22 +136,30 @@ namespace locationserver
 
 
             }
-            public void InsertData(string allText)
+            public void InsertData(string[] allText)
             {
-                string[] splitString = allText.Split(',');
+
                 try
                 {
                     SQLiteCommand sQLiteCommand;
                     sQLiteCommand = sqlConnection.CreateCommand();
-                    sQLiteCommand.CommandText = "INSERT INTO Orders(orderId, tableNum, course, dish, price, membersDiscount, paid, payment)";
+                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod) values (@param1, @param2,@param3,@param4,@param5,@param6)";
+                    sQLiteCommand.Parameters.AddWithValue("@param1", allText[2]);
+                    sQLiteCommand.Parameters.AddWithValue("@param2", allText[3]);
+                    sQLiteCommand.Parameters.AddWithValue("@param3", allText[4]);
+                    sQLiteCommand.Parameters.AddWithValue("@param4", allText[5]);
+                    sQLiteCommand.Parameters.AddWithValue("@param5", allText[6]);
+                    sQLiteCommand.Parameters.AddWithValue("@param6", allText[7]);
+                    sQLiteCommand.Prepare();
+                    sQLiteCommand.ExecuteNonQuery();
                 }
-                catch
+                catch (Exception e)
                 {
 
                 }
             }
 
-         
+
         }
 
         public static void CreateTable(SQLiteConnection connection)
