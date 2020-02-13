@@ -39,8 +39,13 @@ namespace locationserver
             {
                 SQLiteConnection.CreateFile("database.db");
             }
-            sqlConnection = new SQLiteConnection(@"Data Source=database.db;");
+            sqlConnection = new SQLiteConnection("Data Source=database.db;Version=3;New=True;Compress=True;");
+
             sqlConnection.Open();
+            CreateTable(sqlConnection);
+            
+
+
 
             //TcpListener listener;
             Socket connection;
@@ -145,9 +150,24 @@ namespace locationserver
 
                 }
             }
+
+         
         }
 
+        public static void CreateTable(SQLiteConnection connection)
+        {
+            SQLiteCommand sQCommand;
+            string orderTable = "CREATE TABLE Orders (OrderId INT, DateTime DATETIME, TableNumber INT, Course TEXT, DishName TEXT, Price DOUBLE, DiscountPrice DOUBLE, DiscountBool INT, PaidBool INT, PaymentMethod TEXT)";
+            string paidTable = "CREATE TABLE PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT)";
 
+            sQCommand = connection.CreateCommand();
+            sQCommand.CommandText = orderTable;
+            sQCommand.ExecuteNonQuery();
+
+            sQCommand.CommandText = paidTable;
+            sQCommand.ExecuteNonQuery();
+
+        }
 
     }
 
