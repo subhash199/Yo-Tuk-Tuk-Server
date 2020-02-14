@@ -115,6 +115,11 @@ namespace locationserver
                             sw.WriteLine(sendItems);
                             sw.Close();
                             break;
+                        case "requestXRead":
+                           string readBack = requestXRead();
+                            sw.WriteLine(readBack);
+                            sw.Close();
+                            break;
 
                         default:
                             break;
@@ -144,13 +149,14 @@ namespace locationserver
                 {
                     SQLiteCommand sQLiteCommand;
                     sQLiteCommand = sqlConnection.CreateCommand();
-                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod) values (@param1, @param2,@param3,@param4,@param5,@param6)";
+                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod) values (@param1, @param2,@param3,@param4,@param5,@param6,@Param7)";
                     sQLiteCommand.Parameters.AddWithValue("@param1", allText[2]);
                     sQLiteCommand.Parameters.AddWithValue("@param2", allText[3]);
                     sQLiteCommand.Parameters.AddWithValue("@param3", allText[4]);
                     sQLiteCommand.Parameters.AddWithValue("@param4", allText[5]);
                     sQLiteCommand.Parameters.AddWithValue("@param5", allText[6]);
                     sQLiteCommand.Parameters.AddWithValue("@param6", allText[7]);
+                    sQLiteCommand.Parameters.AddWithValue("@Param7", allText[8]);
                     sQLiteCommand.Prepare();
                     sQLiteCommand.ExecuteNonQuery();
                 }
@@ -163,11 +169,29 @@ namespace locationserver
 
         }
 
+        public static string requestXRead ()
+        {
+            string readData = "";
+            SQLiteDataReader sqlite_dataReader;
+            SQLiteCommand sqlite_command;
+            sqlite_command = sqlConnection.CreateCommand();
+            sqlite_command.CommandText = "SELECT * FROM PaidTable WHERE Reset='0'";
+            sqlite_dataReader = sqlite_command.ExecuteReader();
+
+            while (sqlite_dataReader.Read())
+            {
+                readData = sqlite_dataReader.GetString(0);
+
+            }
+            return readData;
+
+        }
+
         public static void CreateTable(SQLiteConnection connection)
         {
             SQLiteCommand sQCommand;
             string orderTable = "CREATE TABLE IF NOT EXISTS Orders (OrderId INT, DateTime DATETIME, TableNumber INT, Course TEXT, DishName TEXT, Price DOUBLE, DiscountPrice DOUBLE, DiscountBool INT, PaidBool INT, PaymentMethod TEXT)";
-            string paidTable = "CREATE TABLE IF NOT EXISTS PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT)";
+            string paidTable = "CREATE TABLE IF NOT EXISTS PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT, Reset INT)";
 
             sQCommand = connection.CreateCommand();
             sQCommand.CommandText = orderTable;
