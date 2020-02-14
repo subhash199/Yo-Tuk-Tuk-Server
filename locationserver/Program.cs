@@ -99,6 +99,7 @@ namespace locationserver
                     {
                         case "paid":
                             InsertData(fileName);
+                            File.Delete(fileName[1]);
                             break;
                         case "create":
                             StreamWriter writer = new StreamWriter(fileName[1], true);
