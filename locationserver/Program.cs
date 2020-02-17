@@ -21,6 +21,8 @@ namespace locationserver
         public static SQLiteConnection sqlConnection;
         public static SQLiteCommand cmd = new SQLiteCommand(sqlConnection);
         public static string readline;
+        public static MainWindow mainWindow;
+
 
         [STAThread]
 
@@ -29,8 +31,13 @@ namespace locationserver
 
             FreeConsole();
             var app = new App();
+
             return app.Run();
 
+        }
+        public static void getWindow(MainWindow window)
+        {
+            mainWindow = window;
         }
 
         public static void runServer()
@@ -79,6 +86,8 @@ namespace locationserver
             public void clientRequest(Socket connection)
             {
 
+
+
                 NetworkStream socketStream = new NetworkStream(connection);
                 Console.WriteLine("Connection Received");
                 StreamWriter sw = new StreamWriter(socketStream);
@@ -87,16 +96,33 @@ namespace locationserver
                                       //socketStream.ReadTimeout = 1000;
                                       //socketStream.WriteTimeout = 1000;
 
+
+
                 try
                 {
 
                     readline = sr.ReadLine();
-                    string[] fileName = readline.Split(',');
-                    var itemList = fileName.ToList();
-                    itemList.RemoveRange(0, 2);
-                    itemList.RemoveAll(string.IsNullOrEmpty);
+                    //mainWindow.Dispatcher.Invoke(() =>
+                    //{
+
+                    //    mainWindow.view_button.Text += "\r\nConnection Received";
+                    //});
+                    
+                        string[] fileName = readline.Split(',');
+                        var itemList = fileName.ToList();
+                        itemList.RemoveRange(0, 2);
+                    try
+                    {
+                        itemList.RemoveAll(string.IsNullOrEmpty);
+                    }
+                    catch
+                    {
+
+                    }
+
                     switch (fileName[0])
                     {
+
                         case "paid":
                             InsertData(fileName);
                             File.Delete(fileName[1]);
@@ -112,11 +138,12 @@ namespace locationserver
                         case "read":
                             string[] readFile = File.ReadAllLines(fileName[1]);
                             string sendItems = string.Join(",", readFile.ToArray());
+                            //mainWindow.view_button.Text += "\r\nConnection Sent";
                             sw.WriteLine(sendItems);
                             sw.Close();
                             break;
                         case "requestXRead":
-                           string readBack = requestXRead();
+                            string readBack = requestXRead();
                             sw.WriteLine(readBack);
                             sw.Close();
                             break;
@@ -149,14 +176,14 @@ namespace locationserver
                 {
                     SQLiteCommand sQLiteCommand;
                     sQLiteCommand = sqlConnection.CreateCommand();
-                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod) values (@param1, @param2,@param3,@param4,@param5,@param6,@Param7)";
-                    sQLiteCommand.Parameters.AddWithValue("@param1", allText[2]);
-                    sQLiteCommand.Parameters.AddWithValue("@param2", allText[3]);
-                    sQLiteCommand.Parameters.AddWithValue("@param3", allText[4]);
-                    sQLiteCommand.Parameters.AddWithValue("@param4", allText[5]);
-                    sQLiteCommand.Parameters.AddWithValue("@param5", allText[6]);
-                    sQLiteCommand.Parameters.AddWithValue("@param6", allText[7]);
-                    sQLiteCommand.Parameters.AddWithValue("@Param7", allText[8]);
+                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod, Reset) values (@orderid, @datetime,@tablenumber,@amount,@discount,@paymentmethod,@reset)";
+                    sQLiteCommand.Parameters.AddWithValue("@orderid", allText[2]);
+                    sQLiteCommand.Parameters.AddWithValue("@datetime", allText[3]);
+                    sQLiteCommand.Parameters.AddWithValue("@tablenumber", allText[4]);
+                    sQLiteCommand.Parameters.AddWithValue("@amount", allText[5]);
+                    sQLiteCommand.Parameters.AddWithValue("@discount", allText[6]);
+                    sQLiteCommand.Parameters.AddWithValue("@paymentmethod", allText[7]);
+                    sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);
                     sQLiteCommand.Prepare();
                     sQLiteCommand.ExecuteNonQuery();
                 }
@@ -169,20 +196,33 @@ namespace locationserver
 
         }
 
-        public static string requestXRead ()
+        public static string requestXRead()
         {
             string readData = "";
-            SQLiteDataReader sqlite_dataReader;
-            SQLiteCommand sqlite_command;
-            sqlite_command = sqlConnection.CreateCommand();
-            sqlite_command.CommandText = "SELECT * FROM PaidTable WHERE Reset='0'";
-            sqlite_dataReader = sqlite_command.ExecuteReader();
-
-            while (sqlite_dataReader.Read())
+            try
             {
-                readData = sqlite_dataReader.GetString(0);
+                SQLiteDataReader sqlite_dataReader;
+                SQLiteCommand sqlite_command;
+                sqlite_command = sqlConnection.CreateCommand();
+                sqlite_command.CommandText = "SELECT * FROM PaidTable WHERE Reset='0'";
+                sqlite_dataReader = sqlite_command.ExecuteReader();
+
+                while (sqlite_dataReader.Read())
+                {
+                    readData += ",amount,";
+                    readData += sqlite_dataReader.GetDouble(3);
+                    readData += ",discount,";
+                    readData += sqlite_dataReader.GetDouble(4);
+                    readData += ",paymentMethod,";
+                    readData += sqlite_dataReader.GetString(5);
+                 
+                }
+            }
+            catch (Exception e)
+            {
 
             }
+
             return readData;
 
         }

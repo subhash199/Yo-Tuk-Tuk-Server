@@ -21,6 +21,7 @@ namespace locationserver
         public MainWindow()
         {
             InitializeComponent();
+            Program.getWindow(this);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -40,9 +41,12 @@ namespace locationserver
             {
                 return;
             }
+            
             Program.listener.Stop();
             view_button.Text="Server Stopped Listening";
             runServer = false;
         }
+
+       
     }
 }
