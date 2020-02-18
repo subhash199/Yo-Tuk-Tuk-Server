@@ -122,7 +122,9 @@ namespace locationserver
 
                     switch (fileName[0])
                     {
-
+                        case "reset":
+                            resetXread();
+                            break;
                         case "paid":
                             InsertData(fileName);
                             File.Delete(fileName[1]);
@@ -193,6 +195,14 @@ namespace locationserver
                 }
             }
 
+
+        }
+        public static void resetXread()
+        {
+            SQLiteCommand command;
+            command = sqlConnection.CreateCommand();
+            command.CommandText = "update PaidTable set Reset =1 where Reset=0;";
+            command.ExecuteNonQuery();
 
         }
 
