@@ -10,6 +10,6 @@
         <Button Content="Start Server" HorizontalAlignment="Left" Margin="46,180,0,0" VerticalAlignment="Top" Width="229" FontSize="36" Height="50" Click="Button_Click"/>
         <Button Content="Stop Server" HorizontalAlignment="Left" Margin="46,266,0,0" VerticalAlignment="Top" Width="229" FontSize="36" Click="Button_Click_1"/>
         <TextBlock x:Name="view_button" HorizontalAlignment="left" Margin="316,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="305" Width="451" FontSize="16" TextAlignment="Left"/>
-        <Label Content="Location Server" HorizontalAlignment="Left" Margin="202,10,0,0" VerticalAlignment="Top" FontSize="36"/>
+        <Label Content="Yo-Tuk-Tuk Server" HorizontalAlignment="Left" Margin="234,10,0,0" VerticalAlignment="Top" FontSize="36"/>
     </Grid>
 </Window>
