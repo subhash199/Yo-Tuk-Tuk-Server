@@ -64,10 +64,11 @@ namespace locationserver
                 Console.WriteLine("Server is Listening");
                 while (true)
                 {
-                    connection = listener.AcceptSocket();
+                    connection = listener.AcceptSocket();                  
                     requesthandler = new Handler();
                     Thread t = new Thread(() => requesthandler.clientRequest(connection));
                     t.Start();
+                   
 
                 }
             }
@@ -122,6 +123,11 @@ namespace locationserver
 
                     switch (fileName[0])
                     {
+                        case "itemsList":
+                            string sendBack= readItems();
+                            sw.WriteLine(sendBack);
+                            sw.Close();
+                            break;
                         case "reset":
                             resetXread();
                             break;
@@ -171,6 +177,34 @@ namespace locationserver
 
 
             }
+
+            private string readItems()
+            {
+                string read = "";
+                try
+                {
+                    SQLiteDataReader sqlite_dataReader;
+                    SQLiteCommand sqlite_command;
+                    sqlite_command = sqlConnection.CreateCommand();
+                    sqlite_command.CommandText = "SELECT Item, Price FROM ItemList";
+                    sqlite_dataReader = sqlite_command.ExecuteReader();
+
+                    while (sqlite_dataReader.Read())
+                    {
+                        
+                        read += sqlite_dataReader.GetString(0)+",";
+                        read += sqlite_dataReader.GetDouble(1)+",";
+                       
+
+                    }
+                }
+                catch (Exception e)
+                {
+
+                }
+                return read;
+            }
+
             public void InsertData(string[] allText)
             {
 
