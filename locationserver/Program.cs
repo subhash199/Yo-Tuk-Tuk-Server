@@ -59,7 +59,7 @@ namespace locationserver
             Handler requesthandler;
             try
             {
-                listener = new TcpListener(IPAddress.Any, 43);
+                listener = new TcpListener(IPAddress.Any, 5002);
                 listener.Start();
                 Console.WriteLine("Server is Listening");
                 while (true)
