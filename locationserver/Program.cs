@@ -123,8 +123,12 @@ namespace locationserver
 
                     switch (fileName[0])
                     {
+                        case "listAll":
+                            string listItems = readItems("listAll");
+                            sw.WriteLine(listItems);
+                            break;
                         case "itemsList":
-                            string sendBack= readItems();
+                            string sendBack= readItems("itemsList");
                             sw.WriteLine(sendBack);
                             sw.Close();
                             break;
@@ -178,7 +182,9 @@ namespace locationserver
 
             }
 
-            private string readItems()
+        
+
+            private string readItems(string what)
             {
                 string read = "";
                 try
@@ -186,17 +192,35 @@ namespace locationserver
                     SQLiteDataReader sqlite_dataReader;
                     SQLiteCommand sqlite_command;
                     sqlite_command = sqlConnection.CreateCommand();
-                    sqlite_command.CommandText = "SELECT Item, Price FROM ItemList";
-                    sqlite_dataReader = sqlite_command.ExecuteReader();
-
-                    while (sqlite_dataReader.Read())
+                    if(what == "itemsList")
                     {
-                        
-                        read += sqlite_dataReader.GetString(0)+",";
-                        read += sqlite_dataReader.GetDouble(1)+",";
-                       
+                        sqlite_command.CommandText = "SELECT Item, Price FROM ItemList";
+                        sqlite_dataReader = sqlite_command.ExecuteReader();
+                        while (sqlite_dataReader.Read())
+                        {
 
+                            read += sqlite_dataReader.GetString(0) + ",";
+                            read += sqlite_dataReader.GetDouble(1) + ",";
+
+
+                        }
                     }
+                    else if(what =="listAll")
+                    {
+                        sqlite_command.CommandText = "SELECT * FROM ItemList";
+                        sqlite_dataReader = sqlite_command.ExecuteReader();
+                        while (sqlite_dataReader.Read())
+                        {
+
+                            read += sqlite_dataReader.GetInt16(0) + ",";
+                            read += sqlite_dataReader.GetString(1) + ",";
+                            read += sqlite_dataReader.GetString(2) + ",";
+                            read += sqlite_dataReader.GetDouble(3) + ",";
+                        }
+                    }
+                  
+
+                    
                 }
                 catch (Exception e)
                 {
