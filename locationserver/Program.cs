@@ -123,6 +123,7 @@ namespace locationserver
 
                     switch (fileName[0])
                     {
+
                         case "listAll":
                             string listItems = readItems("listAll");
                             sw.WriteLine(listItems);
@@ -159,7 +160,10 @@ namespace locationserver
                             sw.WriteLine(readBack);
                             sw.Close();
                             break;
-
+                        case "updateDetails":
+                            InsertData();
+                            break;
+                      
                         default:
                             break;
                     }
@@ -182,7 +186,7 @@ namespace locationserver
 
             }
 
-        
+           
 
             private string readItems(string what)
             {
