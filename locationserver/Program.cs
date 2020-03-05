@@ -161,7 +161,7 @@ namespace locationserver
                             sw.Close();
                             break;
                         case "updateDetails":
-                            InsertData();
+                            InsertData(fileName);                            
                             break;
                       
                         default:
@@ -240,16 +240,29 @@ namespace locationserver
                 {
                     SQLiteCommand sQLiteCommand;
                     sQLiteCommand = sqlConnection.CreateCommand();
-                    sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod, Reset) values (@orderid, @datetime,@tablenumber,@amount,@discount,@paymentmethod,@reset)";
-                    sQLiteCommand.Parameters.AddWithValue("@orderid", allText[2]);
-                    sQLiteCommand.Parameters.AddWithValue("@datetime", allText[3]);
-                    sQLiteCommand.Parameters.AddWithValue("@tablenumber", allText[4]);
-                    sQLiteCommand.Parameters.AddWithValue("@amount", allText[5]);
-                    sQLiteCommand.Parameters.AddWithValue("@discount", allText[6]);
-                    sQLiteCommand.Parameters.AddWithValue("@paymentmethod", allText[7]);
-                    sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);
+                    if (allText[0].Contains("updateDetails"))
+                    {
+                        sQLiteCommand.CommandText = "UPDATE ItemList SET category = @category, Item = @item, Price = @price WHERE ItemID = @id";
+                        sQLiteCommand.Parameters.AddWithValue("@category", allText[2]);
+                        sQLiteCommand.Parameters.AddWithValue("@item", allText[3]);
+                        sQLiteCommand.Parameters.AddWithValue("@price", allText[4]);
+                        sQLiteCommand.Parameters.AddWithValue("@id", allText[1]);
+                    }
+                    else
+                    {
+                        sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod, Reset) values (@orderid, @datetime,@tablenumber,@amount,@discount,@paymentmethod,@reset)";
+                        sQLiteCommand.Parameters.AddWithValue("@orderid", allText[2]);
+                        sQLiteCommand.Parameters.AddWithValue("@datetime", allText[3]);
+                        sQLiteCommand.Parameters.AddWithValue("@tablenumber", allText[4]);
+                        sQLiteCommand.Parameters.AddWithValue("@amount", allText[5]);
+                        sQLiteCommand.Parameters.AddWithValue("@discount", allText[6]);
+                        sQLiteCommand.Parameters.AddWithValue("@paymentmethod", allText[7]);
+                        sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);                   
+                    }
                     sQLiteCommand.Prepare();
                     sQLiteCommand.ExecuteNonQuery();
+
+
                 }
                 catch (Exception e)
                 {
