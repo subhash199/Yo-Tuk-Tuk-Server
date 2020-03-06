@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Data.SqlClient;
+using System.Data;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Data.SQLite;
+using System.Threading;
+using System.Runtime.InteropServices;
+using System.Drawing.Printing;
 
 namespace locationserver
 {
@@ -22,9 +27,8 @@ namespace locationserver
         public static SQLiteCommand cmd = new SQLiteCommand(sqlConnection);
         public static string readline;
         public static MainWindow mainWindow;
-
-
-        [STAThread]
+        public static List<string> printList = new List<string>();
+       [STAThread]
 
         public static int Main(string[] args)
         {
@@ -64,11 +68,11 @@ namespace locationserver
                 Console.WriteLine("Server is Listening");
                 while (true)
                 {
-                    connection = listener.AcceptSocket();                  
+                    connection = listener.AcceptSocket();
                     requesthandler = new Handler();
                     Thread t = new Thread(() => requesthandler.clientRequest(connection));
                     t.Start();
-                   
+
 
                 }
             }
@@ -89,29 +93,24 @@ namespace locationserver
 
 
 
-                NetworkStream socketStream = new NetworkStream(connection);
+                NetworkStream socketStream = new NetworkStream(connection); // exception
                 Console.WriteLine("Connection Received");
                 StreamWriter sw = new StreamWriter(socketStream);
                 StreamReader sr = new StreamReader(socketStream);
                 sw.AutoFlush = true;  // sw flushes automatically
                                       //socketStream.ReadTimeout = 1000;
                                       //socketStream.WriteTimeout = 1000;
-
-
+                                      
 
                 try
                 {
-
-                    readline = sr.ReadLine();
-                    //mainWindow.Dispatcher.Invoke(() =>
-                    //{
-
-                    //    mainWindow.view_button.Text += "\r\nConnection Received";
-                    //});
                     
-                        string[] fileName = readline.Split(',');
-                        var itemList = fileName.ToList();
-                        itemList.RemoveRange(0, 2);
+                    readline = sr.ReadLine();
+                    
+
+                    string[] fileName = readline.Split(',');
+                    var itemList = fileName.ToList();
+                    itemList.RemoveRange(0, 2);
                     try
                     {
                         itemList.RemoveAll(string.IsNullOrEmpty);
@@ -129,7 +128,7 @@ namespace locationserver
                             sw.WriteLine(listItems);
                             break;
                         case "itemsList":
-                            string sendBack= readItems("itemsList");
+                            string sendBack = readItems("itemsList");
                             sw.WriteLine(sendBack);
                             sw.Close();
                             break;
@@ -145,8 +144,9 @@ namespace locationserver
                             writer.Close();
                             break;
                         case "write":
-
                             File.AppendAllLines(fileName[1], itemList);
+                            sw.WriteLine("OK");
+                            sw.Close();
                             break;
                         case "read":
                             string[] readFile = File.ReadAllLines(fileName[1]);
@@ -161,9 +161,17 @@ namespace locationserver
                             sw.Close();
                             break;
                         case "updateDetails":
-                            InsertData(fileName);                            
+                            InsertData(fileName);
                             break;
-                      
+                        case "holdPrint":
+                             printList = new List<string>(fileName);
+                             PrintReceipt();
+                            break;
+                        case "printReceipt":
+                            printList = new List<string>(fileName);
+                            PrintReceipt();
+                            break;
+
                         default:
                             break;
                     }
@@ -180,14 +188,297 @@ namespace locationserver
                 {
                     socketStream.Close();
                     connection.Close();
+                  
                     //sqlConnection.Close();                   
                 }
 
 
             }
 
+            private void PrintReceipt()
+            {
+                if(printList[0].Contains("holdPrint"))
+                {
+                    kitchenRecipt();
+                }
+                else if(printList[0].Contains("printReceipt"))
+                {
+                    receiptPrint();
+                }
+            }
+            private void receiptPrint()
+            {
+                var printDocument = new PrintDocument();
+
+                printDocument.PrintPage += new PrintPageEventHandler(PrintReceipt);
+
+                PrinterSettings printerSettings = new PrinterSettings();
+                printDocument.PrinterSettings = printerSettings;
+                printDocument.Print();
+            }
+
+            private void PrintReceipt(object sender, PrintPageEventArgs e)
+            {
+                Graphics graphics = e.Graphics;
+                Font font = new Font("Courier New", 12);
+
+                float fontHeight = font.GetHeight();
+
+                int startX = 0;
+                int startY = 0;
+                int offSet = 120;
+
+                int mCount = 0;
+                int sCount = 0;
+                int cCount = 0;
+                int dCount = 0;
+
+
+                //e.PageSettings.PaperSize.Width = 50;
+
+                System.Drawing.Image newImage = System.Drawing.Image.FromFile("YoTukTuk.png");
+
+                graphics.DrawImage(newImage, 80, 0);
+
+                graphics.DrawString("Yo Tuk Tuk \n 53 Lairgate \n Beverley \n HU17 8ET\n01482 881955", new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
+                offSet += 100;
+                graphics.DrawString("Table " + printList[2].ToString(), new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
+                offSet += 40;
+                for (int i = 0; i < printList.Count; i++)
+                {
+                    void shortMethod()
+                    {
+                        graphics.DrawString(printList[i+1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                        graphics.DrawString(printList[i+2], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 30, startY + offSet);
+                        graphics.DrawString("£ " + printList[i+3], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+
+                        offSet += 20;
+                    }
+                    switch (printList[i])
+                    {
+                        case "*m":
+                            if (mCount == 0)
+                            {
+                                graphics.DrawString("--------------------------------------", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                offSet += 20;
+                                mCount += 1;
+                            }
+                            shortMethod();
+                            break;
+                        case "*sd":
+                            if (sCount == 0)
+                            {
+                                graphics.DrawString("--------------------------------------", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                offSet += 20;
+                                sCount += 1;
+                            }
+                            shortMethod();
+                            break;
+                        case "*c":
+                            if (cCount == 0)
+                            {
+                                graphics.DrawString("--------------------------------------", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                offSet += 20;
+                                cCount += 1;
+                            }
+                            shortMethod();
+                            break;
+                        case "*d":
+                            if (dCount == 0)
+                            {
+                                graphics.DrawString("--------------------------------------", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                offSet += 20;
+                                dCount += 1;
+                            }
+                            shortMethod();
+                            break;
+                        case "membersDiscount":
+                            offSet += 20;
+                            graphics.DrawString("Members Discount", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                            graphics.DrawString("£-" + printList[i+1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+
+                            offSet += 20;
+                            break;
+                        case "grandTotal":
+                            graphics.DrawString("Grand Total", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                            graphics.DrawString("£ " + printList[i+1].ToString(), new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+                            offSet += 20;
+                            break;
+                        case "paid":
+                            graphics.DrawString("Paid", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);                           
+                            graphics.DrawString("£ " + printList[i+1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+
+                            offSet += 40;
+
+                            graphics.DrawString("Thank You For Dining With Us!\n\n", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                            break;
+                        default:
+
+                            shortMethod();
+                            break;
+                    }
+
+
+
+                }
+              
+             
            
 
+
+
+
+
+            }
+            #region kitchen Print
+            private void kitchenRecipt()
+            {
+                var printDocument = new PrintDocument();
+
+                printDocument.PrintPage += new PrintPageEventHandler(kitchenPrinter);
+
+                printDocument.Print();
+
+
+            }
+
+
+            private void kitchenPrinter(object sender, PrintPageEventArgs e)
+            {             
+               
+                List<string> visitedStrings = new List<string>();
+
+                bool visited = false;
+                int count = 0;
+
+                Graphics graphics = e.Graphics;
+                Font font = new Font("Arial", 12);
+
+                float fontHeight = font.GetHeight();
+
+                int startX = 0;
+                int startY = 0;
+                int offSet = 20;
+
+                int loop = 0;
+                int sdLoop = 0;
+                int dloop = 0;
+                int cLoop = 0;
+
+                StringFormat format = new StringFormat();
+                format.Alignment = StringAlignment.Center;
+
+
+                graphics.DrawString("Table " + printList[1], font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
+                offSet += 20;
+              
+                for (int i = 0; i < printList.Count; i++)
+                {
+                    void shortMethod()
+                    {
+                        for (int z = 0; z < visitedStrings.Count; z++)
+                        {
+                            if (printList[i + 1] == visitedStrings[z])
+                            {
+                                visited = true;
+                                break;
+                            }
+                        }
+                        if (visited == false)
+                        {
+                            for (int x = 0; x < printList.Count; x++)
+                            {
+                                if (printList[i + 1] == printList[x])
+                                {
+                                    count++;
+                                }
+                            }
+                        
+                            graphics.DrawString(count.ToString() + " x " + printList[i + 1], font, new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                            offSet += 20;
+
+                            visitedStrings.Add(printList[i + 1]);
+
+                        }
+                        visited = false;
+                        count = 0;
+                    }
+
+                    switch (printList[i])
+                    {
+                        case "*s":
+
+                            shortMethod();
+                            count = 0;
+                            break;
+
+
+                        case "*m":
+                            {
+
+                                if (loop == 0)
+                                {
+                                   
+                                    graphics.DrawString("----------------------------", font, new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                    offSet += 20;
+                                }
+                                loop++;
+                                shortMethod();                     
+                                break;
+                            }
+                        case "*sd":
+                            {
+                                if (sdLoop == 0)
+                                {
+                                  
+                                    graphics.DrawString("----------------------------", font, new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                    offSet += 20;
+                                }
+                                sdLoop++;
+                                loop = 0;
+                                shortMethod();
+                                break;
+
+                            }
+                        case "*c":
+                            {
+                                if (cLoop == 0)
+                                {
+                                    
+                                    graphics.DrawString("----------------------------", font, new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                    offSet += 20;
+                                }
+                                cLoop++;
+                                loop = 0;
+                                shortMethod();
+                                count = 0;
+                                break;
+                            }
+
+
+                        case "*d":
+                            {
+                                if (dloop == 0)
+                                {
+                                    
+                                    graphics.DrawString("----------------------------", font, new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                                    offSet += 20;
+                                }
+                                dloop++;
+                                shortMethod();
+                                visited = false;
+                                count = 0;
+                                break;
+                            }
+                        default:
+                            break;
+
+
+                    }
+                }
+            }
+            #endregion
+            #region readItems database
             private string readItems(string what)
             {
                 string read = "";
@@ -196,7 +487,7 @@ namespace locationserver
                     SQLiteDataReader sqlite_dataReader;
                     SQLiteCommand sqlite_command;
                     sqlite_command = sqlConnection.CreateCommand();
-                    if(what == "itemsList")
+                    if (what == "itemsList")
                     {
                         sqlite_command.CommandText = "SELECT Item, Price FROM ItemList";
                         sqlite_dataReader = sqlite_command.ExecuteReader();
@@ -209,7 +500,7 @@ namespace locationserver
 
                         }
                     }
-                    else if(what =="listAll")
+                    else if (what == "listAll")
                     {
                         sqlite_command.CommandText = "SELECT * FROM ItemList";
                         sqlite_dataReader = sqlite_command.ExecuteReader();
@@ -222,9 +513,9 @@ namespace locationserver
                             read += sqlite_dataReader.GetDouble(3) + ",";
                         }
                     }
-                  
 
-                    
+
+
                 }
                 catch (Exception e)
                 {
@@ -232,6 +523,8 @@ namespace locationserver
                 }
                 return read;
             }
+            #endregion
+            #region database
 
             public void InsertData(string[] allText)
             {
@@ -257,7 +550,7 @@ namespace locationserver
                         sQLiteCommand.Parameters.AddWithValue("@amount", allText[5]);
                         sQLiteCommand.Parameters.AddWithValue("@discount", allText[6]);
                         sQLiteCommand.Parameters.AddWithValue("@paymentmethod", allText[7]);
-                        sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);                   
+                        sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);
                     }
                     sQLiteCommand.Prepare();
                     sQLiteCommand.ExecuteNonQuery();
@@ -300,7 +593,7 @@ namespace locationserver
                     readData += sqlite_dataReader.GetDouble(4);
                     readData += ",paymentMethod,";
                     readData += sqlite_dataReader.GetString(5);
-                 
+
                 }
             }
             catch (Exception e)
@@ -328,6 +621,6 @@ namespace locationserver
         }
 
     }
-
+    #endregion
 }
 
