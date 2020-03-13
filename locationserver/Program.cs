@@ -9,7 +9,6 @@ using System.Data.SqlClient;
 using System.Data;
 using System.Net;
 using System.Net.Sockets;
-using System.Windows.Controls;
 using System.Data.SQLite;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -28,6 +27,7 @@ namespace locationserver
         public static string readline;
         public static MainWindow mainWindow;
         public static List<string> printList = new List<string>();
+        public static string printerName = "Yo-Tuk-Tuk";
         [STAThread]
 
         public static int Main(string[] args)
@@ -98,8 +98,8 @@ namespace locationserver
                 StreamWriter sw = new StreamWriter(socketStream);
                 StreamReader sr = new StreamReader(socketStream);
                 sw.AutoFlush = true;  // sw flushes automatically
-                                      //socketStream.ReadTimeout = 1000;
-                                      //socketStream.WriteTimeout = 1000;
+                socketStream.ReadTimeout = 1000;
+                socketStream.WriteTimeout = 1000;
 
                 try
                 {
@@ -124,7 +124,7 @@ namespace locationserver
 
                         case "logIn":
                             string respond = UserID(fileName);
-                            sw.WriteLine(respond);                            
+                            sw.WriteLine(respond);
                             break;
                         case "signUp":
                             string response = UserID(fileName);
@@ -137,7 +137,7 @@ namespace locationserver
                             break;
                         case "itemsList":
                             string sendBack = readItems("itemsList");
-                            sw.WriteLine(sendBack);                            
+                            sw.WriteLine(sendBack);
                             break;
                         case "reset":
                             resetXread();
@@ -152,17 +152,17 @@ namespace locationserver
                             break;
                         case "write":
                             File.AppendAllLines(fileName[1], itemList);
-                            sw.WriteLine("OK");                            
+                            sw.WriteLine("OK");
                             break;
                         case "read":
                             string[] readFile = File.ReadAllLines(fileName[1]);
                             string sendItems = string.Join(",", readFile.ToArray());
                             //mainWindow.view_button.Text += "\r\nConnection Sent";
-                            sw.WriteLine(sendItems);                            
+                            sw.WriteLine(sendItems);
                             break;
                         case "requestXRead":
                             string readBack = requestXRead();
-                            sw.WriteLine(readBack);                            
+                            sw.WriteLine(readBack);
                             break;
                         case "updateDetails":
                             InsertData(fileName);
@@ -212,10 +212,10 @@ namespace locationserver
                     sQLiteCommand.CommandText = "SELECT * FROM Users WHERE LogInId =@id";
                     sQLiteCommand.Parameters.AddWithValue("@id", fileName[2]);
                     sqlite_dataReader = sQLiteCommand.ExecuteReader();
-                    
+
                     while (sqlite_dataReader.Read())
                     {
-                        if(fileName[2]==sqlite_dataReader.GetInt16(2).ToString())
+                        if (fileName[2] == sqlite_dataReader.GetInt16(2).ToString())
                         {
                             isExist = true;
                         }
@@ -245,8 +245,8 @@ namespace locationserver
                     sqlite_dataReader = sQLiteCommand.ExecuteReader();
                     while (sqlite_dataReader.Read())
                     {
-                       
-                        if (fileName[1]== sqlite_dataReader.GetInt16(1).ToString())
+
+                        if (fileName[1] == sqlite_dataReader.GetInt64(1).ToString())
                         {
                             isExist = true;
                             break;
@@ -254,7 +254,7 @@ namespace locationserver
 
                     }
                     sqlite_dataReader.Close();
-                    if(isExist == true)
+                    if (isExist == true)
                     {
                         returnString = "exist";
 
@@ -283,15 +283,15 @@ namespace locationserver
                 var printDocument = new PrintDocument();
 
                 printDocument.PrintPage += new PrintPageEventHandler(PrintReceipt);
-
                 PrinterSettings printerSettings = new PrinterSettings();
+                printerSettings.PrinterName = printerName;
                 printDocument.PrinterSettings = printerSettings;
                 printDocument.Print();
             }
 
-            private void PrintReceipt(object sender, PrintPageEventArgs e)
+            private void PrintReceipt(object sender, PrintPageEventArgs t)
             {
-                Graphics graphics = e.Graphics;
+                Graphics graphics = t.Graphics;
                 Font font = new Font("Courier New", 12);
 
                 float fontHeight = font.GetHeight();
@@ -308,26 +308,29 @@ namespace locationserver
 
                 //e.PageSettings.PaperSize.Width = 50;
 
-                System.Drawing.Image newImage = System.Drawing.Image.FromFile("YoTukTuk.png");
+                Image newImage = Image.FromFile("YoTukTuk.png");
 
-                graphics.DrawImage(newImage, 80, 0);
+                graphics.DrawImage(newImage, 80, 0, 100, 100);
 
                 graphics.DrawString("Yo Tuk Tuk \n 53 Lairgate \n Beverley \n HU17 8ET\n01482 881955", new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
                 offSet += 100;
-                graphics.DrawString("Table " + printList[2].ToString(), new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
+                graphics.DrawString("Table " + printList[1].ToString(), new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
                 offSet += 40;
                 for (int i = 0; i < printList.Count; i++)
                 {
                     void shortMethod()
                     {
                         graphics.DrawString(printList[i + 1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
-                        graphics.DrawString(printList[i + 2], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 30, startY + offSet);
-                        graphics.DrawString("£ " + printList[i + 3], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+                        graphics.DrawString(printList[i + 2], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 40, startY + offSet);
+                        graphics.DrawString("£ " + printList[i + 3], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 200, startY + offSet);
 
                         offSet += 20;
                     }
                     switch (printList[i])
                     {
+                        case "*s":
+                            shortMethod();
+                            break;
                         case "*m":
                             if (mCount == 0)
                             {
@@ -367,40 +370,31 @@ namespace locationserver
                         case "membersDiscount":
                             offSet += 20;
                             graphics.DrawString("Members Discount", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
-                            graphics.DrawString("£-" + printList[i + 1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+                            graphics.DrawString("£-" + printList[i + 1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 200, startY + offSet);
 
                             offSet += 20;
                             break;
                         case "grandTotal":
                             graphics.DrawString("Grand Total", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
-                            graphics.DrawString("£ " + printList[i + 1].ToString(), new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+                            graphics.DrawString("£ " + printList[i + 1].ToString(), new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 200, startY + offSet);
                             offSet += 20;
                             break;
                         case "paid":
                             graphics.DrawString("Paid", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
-                            graphics.DrawString("£ " + printList[i + 1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 220, startY + offSet);
+                            graphics.DrawString("£ " + printList[i + 1], new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), 200, startY + offSet);
 
                             offSet += 40;
 
                             graphics.DrawString("Thank You For Dining With Us!\n\n", new Font("Arial", 12), new SolidBrush(System.Drawing.Color.Black), startX, startY + offSet);
+                            offSet += 40;
                             break;
                         default:
-
-                            shortMethod();
                             break;
                     }
 
 
 
                 }
-
-
-
-
-
-
-
-
             }
             #endregion
             #region kitchen Print
@@ -409,7 +403,9 @@ namespace locationserver
                 var printDocument = new PrintDocument();
 
                 printDocument.PrintPage += new PrintPageEventHandler(kitchenPrinter);
-
+                PrinterSettings printerSettings = new PrinterSettings();
+                printerSettings.PrinterName = printerName;
+                printDocument.PrinterSettings = printerSettings;
                 printDocument.Print();
 
 
@@ -549,7 +545,9 @@ namespace locationserver
 
                     }
                 }
+
             }
+
             #endregion
             #region readItems database
             private string readItems(string what)
@@ -684,7 +682,9 @@ namespace locationserver
             string orderTable = "CREATE TABLE IF NOT EXISTS Orders (OrderId INT, DateTime DATETIME, TableNumber INT, Course TEXT, DishName TEXT, Price DOUBLE, DiscountPrice DOUBLE, DiscountBool INT, PaidBool INT, PaymentMethod TEXT)";
             string paidTable = "CREATE TABLE IF NOT EXISTS PaidTable (OrderId INT, DataTime DATATIME, TableNumber INT, Amount DOUBLE, DiscountAmount DOUBLE, PaymentMethod TEXT, Reset INT)";
             string userTable = "CREATE TABLE IF NOT EXISTS Users (Name TEXT, LogInId INT)";
+
             sQCommand = connection.CreateCommand();
+
             sQCommand.CommandText = orderTable;
             sQCommand.ExecuteNonQuery();
 
@@ -693,6 +693,7 @@ namespace locationserver
 
             sQCommand.CommandText = userTable;
             sQCommand.ExecuteNonQuery();
+
 
         }
 
