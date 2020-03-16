@@ -28,6 +28,10 @@ namespace locationserver
         public static MainWindow mainWindow;
         public static List<string> printList = new List<string>();
         public static string printerName = "Yo-Tuk-Tuk";
+        public static double cash = 0;
+        public static double card = 0;
+        public static double Discount = 0;
+        public static double total = 0;
         [STAThread]
 
         public static int Main(string[] args)
@@ -666,6 +670,27 @@ namespace locationserver
                     readData += sqlite_dataReader.GetString(5);
 
                 }
+                string[] read = readData.Split(',');              
+
+                for (int i = 0; i < read.Length; i++)
+                {
+                    if (read[i] == "cash")
+                    {
+                        cash += double.Parse(read[i - 4]);
+
+
+                    }
+                    else if (read[i] == "card")
+                    {
+                        card += double.Parse(read[i - 4]);
+                    }
+                    else if (read[i] == "discount")
+                    {
+                        Discount += double.Parse(read[i + 1]);
+                    }
+                }
+                total = cash + card;
+                printXread();
             }
             catch (Exception e)
             {
@@ -673,6 +698,39 @@ namespace locationserver
             }
 
             return readData;
+
+        }
+        private static void  printXread()
+        {
+            PrintDocument printDocument = new PrintDocument();
+            printDocument.PrintPage += new PrintPageEventHandler(xPrinter);
+            printDocument.Print();
+
+        }
+
+        private static void xPrinter(object sender, PrintPageEventArgs e)
+        {
+            Graphics graphics = e.Graphics;
+            Font font = new Font("Arial", 12);
+
+            int startX = 0;
+            int startY = 0;
+            int offSet = 20;
+            StreamWriter writer = new StreamWriter("printDoc");
+            //graphics.DrawString("Day End".PadRight(10) + DateTime.Now, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
+            //offSet += 20;
+            //graphics.DrawString("Cash = ".PadRight(10) + cash, font, new SolidBrush(System.Drawing.Color.Black), 0, 0 + 0);
+            //offSet += 20;
+            //graphics.DrawString("Card = ".PadRight(10) + card, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
+            //offSet += 20;
+            //graphics.DrawString("Discount = ".PadRight(10) + Discount, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
+            //offSet += 20;
+            //graphics.DrawString("Total Sales = ".PadRight(10) + total, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
+            //offSet += 20;
+            writer.WriteLine("\tDay End\r\n" + "Cash = ".PadRight(10) + cash + "\r\nCard = ".PadRight(10) + card + "\r\nDiscount = ".PadRight(10) + Discount + "\r\nTotal Sales = ".PadRight(10) + total);
+            writer.Close();
+
+
 
         }
 
