@@ -27,7 +27,7 @@ namespace locationserver
         public static string readline;
         public static MainWindow mainWindow;
         public static List<string> printList = new List<string>();
-        public static string printerName = "Yo-Tuk-Tuk";
+        public static string printerName = "Yo_Tuk_Tuk";
         public static double cash = 0;
         public static double card = 0;
         public static double Discount = 0;
@@ -67,7 +67,7 @@ namespace locationserver
             Handler requesthandler;
             try
             {
-                listener = new TcpListener(IPAddress.Any, 5002);
+                listener = new TcpListener(IPAddress.Any,8002);
                 listener.Start();
                 Console.WriteLine("Server is Listening");
                 while (true)
@@ -102,8 +102,8 @@ namespace locationserver
                 StreamWriter sw = new StreamWriter(socketStream);
                 StreamReader sr = new StreamReader(socketStream);
                 sw.AutoFlush = true;  // sw flushes automatically
-                socketStream.ReadTimeout = 1000;
-                socketStream.WriteTimeout = 1000;
+                //socketStream.ReadTimeout = 1000;
+                //socketStream.WriteTimeout = 1000;
 
                 try
                 {
@@ -618,7 +618,7 @@ namespace locationserver
                     }
                     else
                     {
-                        sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod, Reset) values (@orderid, @datetime,@tablenumber,@amount,@discount,@paymentmethod,@reset)";
+                        sQLiteCommand.CommandText = "INSERT INTO PaidTable(OrderId, DataTime, TableNumber, Amount, DiscountAmount, PaymentMethod, Reset, cashamount, cardamount) values (@orderid, @datetime,@tablenumber,@amount,@discount,@paymentmethod,@reset,@cashpayment,@cardpayment)";
                         sQLiteCommand.Parameters.AddWithValue("@orderid", allText[2]);
                         sQLiteCommand.Parameters.AddWithValue("@datetime", allText[3]);
                         sQLiteCommand.Parameters.AddWithValue("@tablenumber", allText[4]);
@@ -626,6 +626,8 @@ namespace locationserver
                         sQLiteCommand.Parameters.AddWithValue("@discount", allText[6]);
                         sQLiteCommand.Parameters.AddWithValue("@paymentmethod", allText[7]);
                         sQLiteCommand.Parameters.AddWithValue("@reset", allText[8]);
+                        sQLiteCommand.Parameters.AddWithValue("@cashpayment", allText[9]);
+                        sQLiteCommand.Parameters.AddWithValue("@cardpayment", allText[10]);
                     }
                     sQLiteCommand.Prepare();
                     sQLiteCommand.ExecuteNonQuery();
@@ -661,30 +663,30 @@ namespace locationserver
                 sqlite_dataReader = sqlite_command.ExecuteReader();
 
                 while (sqlite_dataReader.Read())
-                {
-                    readData += ",amount,";
-                    readData += sqlite_dataReader.GetDouble(3);
+                {                 
                     readData += ",discount,";
                     readData += sqlite_dataReader.GetDouble(4);
-                    readData += ",paymentMethod,";
-                    readData += sqlite_dataReader.GetString(5);
+                    readData += ",Cash,";
+                    readData += sqlite_dataReader.GetDouble(7);
+                    readData += ",Card,";
+                    readData += sqlite_dataReader.GetDouble(8);
 
                 }
                 string[] read = readData.Split(',');              
 
                 for (int i = 0; i < read.Length; i++)
                 {
-                    if (read[i] == "cash")
+                    if (read[i].Trim() == "Cash")
                     {
-                        cash += double.Parse(read[i - 4]);
+                        cash += double.Parse(read[i+1]);
 
 
                     }
-                    else if (read[i] == "card")
+                    else if (read[i].Trim() == "Card")
                     {
-                        card += double.Parse(read[i - 4]);
+                        card += double.Parse(read[i+1]);
                     }
-                    else if (read[i] == "discount")
+                    else if (read[i].Trim() == "discount")
                     {
                         Discount += double.Parse(read[i + 1]);
                     }
@@ -711,24 +713,30 @@ namespace locationserver
         private static void xPrinter(object sender, PrintPageEventArgs e)
         {
             Graphics graphics = e.Graphics;
-            Font font = new Font("Arial", 12);
+            Font font = new Font("Courier New", 12);
 
             int startX = 0;
             int startY = 0;
-            int offSet = 20;
-            StreamWriter writer = new StreamWriter("printDoc");
-            //graphics.DrawString("Day End".PadRight(10) + DateTime.Now, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
-            //offSet += 20;
-            //graphics.DrawString("Cash = ".PadRight(10) + cash, font, new SolidBrush(System.Drawing.Color.Black), 0, 0 + 0);
-            //offSet += 20;
-            //graphics.DrawString("Card = ".PadRight(10) + card, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
-            //offSet += 20;
-            //graphics.DrawString("Discount = ".PadRight(10) + Discount, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
-            //offSet += 20;
-            //graphics.DrawString("Total Sales = ".PadRight(10) + total, font, new SolidBrush(System.Drawing.Color.Black), 100, 0 + 0);
-            //offSet += 20;
-            writer.WriteLine("\tDay End\r\n" + "Cash = ".PadRight(10) + cash + "\r\nCard = ".PadRight(10) + card + "\r\nDiscount = ".PadRight(10) + Discount + "\r\nTotal Sales = ".PadRight(10) + total);
-            writer.Close();
+            int offSet = 120;
+            Image newImage = Image.FromFile("YoTukTuk.png");
+
+            graphics.DrawImage(newImage, 80, 0, 100, 100);
+
+            graphics.DrawString("Yo Tuk Tuk \n 53 Lairgate \n Beverley \n HU17 8ET\n01482 881955", new Font("Calibri (Body)", 12), new SolidBrush(System.Drawing.Color.Black), 80, 0 + offSet);
+            offSet += 100;
+            //StreamWriter writer = new StreamWriter("printDoc");
+            graphics.DrawString("Day End".PadRight(10) + DateTime.Now, font, new SolidBrush(System.Drawing.Color.Black), startX, 0 + offSet);
+            offSet += 20;
+            graphics.DrawString("Cash = ".PadRight(15) + cash, font, new SolidBrush(System.Drawing.Color.Black), startX, 0 + offSet);
+            offSet += 20;
+            graphics.DrawString("Card = ".PadRight(15) + card, font, new SolidBrush(System.Drawing.Color.Black), startX, 0 + offSet);
+            offSet += 20;
+            graphics.DrawString("Discount = ".PadRight(15) + Discount, font, new SolidBrush(System.Drawing.Color.Black), startX, 0 + offSet);
+            offSet += 20;
+            graphics.DrawString("Total Sales = ".PadRight(15) + total, font, new SolidBrush(System.Drawing.Color.Black), startX, 0 + offSet);
+            offSet += 20;
+            //writer.WriteLine("\tDay End\r\n" + "Cash = ".PadRight(10) + cash + "\r\nCard = ".PadRight(10) + card + "\r\nDiscount = ".PadRight(10) + Discount + "\r\nTotal Sales = ".PadRight(10) + total);
+            //writer.Close();
 
 
 
